@@ -1,0 +1,141 @@
+/* Custom styles */
+body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    transition: background-color 0.3s ease;
+}
+
+/* Table hover effects */
+tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Dark mode hover effect */
+.dark tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Sort indicators - only for Rank and Player columns */
+th:nth-child(1)::after,
+th:nth-child(2)::after {
+    content: '↕';
+    position: absolute;
+    right: 8px;
+    opacity: 0.5;
+}
+
+th:nth-child(1).asc::after,
+th:nth-child(2).asc::after {
+    content: '↑';
+    opacity: 1;
+}
+
+th:nth-child(1).desc::after,
+th:nth-child(2).desc::after {
+    content: '↓';
+    opacity: 1;
+}
+
+/* Position relative only for sortable columns */
+th:nth-child(1),
+th:nth-child(2) {
+    position: relative;
+    user-select: none;
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+/* Input styling */
+input {
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+input:focus {
+    border-color: #3b82f6;
+}
+
+/* Table cell styling */
+td {
+    transition: background-color 0.2s ease;
+}
+
+/* Rarity colors */
+td:nth-child(3) { /* Common */
+    color: #38bdf8;
+}
+
+td:nth-child(4) { /* Uncommon */
+    color: #22c55e;
+}
+
+td:nth-child(5) { /* Rare */
+    color: #f97316;
+}
+
+td:nth-child(6) { /* Epic */
+    color: #ef4444;
+}
+
+td:nth-child(7) { /* Legendary */
+    color: #a855f7;
+}
+
+td:nth-child(8) { /* Mystic */
+    color: #eab308;
+}
+
+td:nth-child(9) { /* Iconic */
+    color: #ec4899;
+}
+
+/* Header styling */
+header h1 {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Container styling */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Table container */
+.overflow-x-auto {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+} 
