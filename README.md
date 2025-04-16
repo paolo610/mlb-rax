@@ -1,6 +1,6 @@
 # MLB Rax
 
-MLB Player Rankings and Analysis tool that displays player values across different rarity tiers.
+MLB Rax tool that shows Rax values of MLB players at different rarity tiers.
 
 ## Features
 - Player rankings with rarity-based values
