@@ -17,4 +17,7 @@ The site uses data from `data.csv` which contains player values across different
 - Epic (Red)
 - Legendary (Purple)
 - Mystic (Yellow)
-- Iconic (Pink) 
+- Iconic (Pink)
+## Changelog
+v1.01 - Changed rarity names to include rax cap
+v1.02 - Optimized search feature for best load times
