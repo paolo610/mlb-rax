@@ -1,11 +1,17 @@
 // Sample data structure (we'll replace this with actual data from the Excel file)
-let players = [
-    // This will be populated from the Excel file
-];
+let players = [];
+let renderedRows = [];
+let isMobile = window.innerWidth <= 768;
 
 // Table sorting
 let sortDirection = 1;
 let lastSortedColumn = -1;
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    isMobile = window.innerWidth <= 768;
+    renderTable(); // Re-render table with appropriate mobile styles
+});
 
 function sortTable(column) {
     const headers = document.querySelectorAll('th');
@@ -40,24 +46,37 @@ function sortTable(column) {
     renderTable();
 }
 
-// Search functionality
+// Search functionality with debounce
+let searchTimeout;
 function filterAndRenderTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     
-    let filteredPlayers = players.filter(player => 
-        player[1].toLowerCase().includes(searchTerm)
-    );
+    // If no search term, show all rows
+    if (!searchTerm) {
+        renderedRows.forEach(row => {
+            row.style.display = '';
+        });
+        return;
+    }
     
-    renderTable(filteredPlayers);
+    // Update visibility of existing rows
+    renderedRows.forEach((row, index) => {
+        const playerName = players[index][1].toLowerCase();
+        row.style.display = playerName.includes(searchTerm) ? '' : 'none';
+    });
 }
 
-// Add event listener for search
-document.getElementById('searchInput').addEventListener('input', filterAndRenderTable);
+// Add event listener for search with debounce
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterAndRenderTable, 100);
+});
 
 // Table rendering
 function renderTable(data = players) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
+    renderedRows = [];
     
     data.forEach((player, index) => {
         const row = document.createElement('tr');
@@ -65,7 +84,7 @@ function renderTable(data = players) {
         
         player.forEach((cell, cellIndex) => {
             const td = document.createElement('td');
-            td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-300';
+            td.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-300';
             
             // Format numbers with commas
             if (typeof cell === 'number' && cellIndex > 1) {
@@ -74,10 +93,16 @@ function renderTable(data = players) {
                 td.textContent = cell;
             }
             
+            // Add mobile-specific classes
+            if (isMobile) {
+                td.classList.add('text-xs');
+            }
+            
             row.appendChild(td);
         });
         
         tbody.appendChild(row);
+        renderedRows.push(row);
     });
 }
 
