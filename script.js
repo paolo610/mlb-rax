@@ -2,6 +2,7 @@
 let players = [];
 let renderedRows = [];
 let isMobile = window.innerWidth <= 768;
+let currentTeamFilter = 'all';
 
 // Table sorting
 let sortDirection = 1;
@@ -13,64 +14,63 @@ window.addEventListener('resize', () => {
     renderTable(); // Re-render table with appropriate mobile styles
 });
 
-function sortTable(column) {
-    const headers = document.querySelectorAll('th');
-    
-    // Reset all headers
-    headers.forEach(header => {
-        header.classList.remove('asc', 'desc');
-    });
-    
-    // Update sort direction
-    if (lastSortedColumn === column) {
-        sortDirection *= -1;
-    } else {
-        sortDirection = 1;
-    }
-    
-    // Update header classes
-    headers[column].classList.add(sortDirection === 1 ? 'asc' : 'desc');
-    
-    // Sort the data
-    players.sort((a, b) => {
-        const aValue = a[column];
-        const bValue = b[column];
-        
-        if (typeof aValue === 'number') {
-            return (aValue - bValue) * sortDirection;
-        }
-        return String(aValue).localeCompare(String(bValue)) * sortDirection;
-    });
-    
-    lastSortedColumn = column;
-    renderTable();
+function extractTeamName(playerName) {
+    const match = playerName.match(/\((.*?)\)/);
+    return match ? match[1] : 'Unknown';
 }
 
-// Search functionality with debounce
-let searchTimeout;
+function getUniqueTeams() {
+    const teams = new Set();
+    players.forEach(player => {
+        teams.add(extractTeamName(player[1]));
+    });
+    return Array.from(teams).sort();
+}
+
+function updateTeamFilter() {
+    const teamSelect = document.getElementById('teamFilter');
+    const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+    const teams = new Set();
+    
+    // Collect all unique teams
+    for (let row of rows) {
+        const team = row.cells[2].textContent.trim();
+        if (team) teams.add(team);
+    }
+    
+    // Update dropdown options
+    teamSelect.innerHTML = '<option value="all">All Teams</option>';
+    Array.from(teams).sort().forEach(team => {
+        const option = document.createElement('option');
+        option.value = team;
+        option.textContent = team;
+        teamSelect.appendChild(option);
+    });
+}
+
 function filterAndRenderTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    // If no search term, show all rows
-    if (!searchTerm) {
-        renderedRows.forEach(row => {
-            row.style.display = '';
-        });
-        return;
-    }
+    const teamFilter = document.getElementById('teamFilter').value;
     
     // Update visibility of existing rows
     renderedRows.forEach((row, index) => {
         const playerName = players[index][1].toLowerCase();
-        row.style.display = playerName.includes(searchTerm) ? '' : 'none';
+        const playerTeam = extractTeamName(players[index][1]);
+        
+        const matchesSearch = !searchTerm || playerName.includes(searchTerm);
+        const matchesTeam = teamFilter === 'all' || playerTeam === teamFilter;
+        
+        row.style.display = matchesSearch && matchesTeam ? '' : 'none';
     });
 }
 
-// Add event listener for search with debounce
+// Add event listeners for search and team filter
 document.getElementById('searchInput').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(filterAndRenderTable, 100);
 });
+
+document.getElementById('teamFilter').addEventListener('change', filterAndRenderTable);
 
 // Table rendering
 function renderTable(data = players) {
@@ -106,55 +106,152 @@ function renderTable(data = players) {
     });
 }
 
-// Load data from CSV file
-async function loadData() {
-    try {
-        console.log('Attempting to load data.csv...');
-        const response = await fetch('data.csv');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+function sortTable(columnIndex) {
+    const table = document.getElementById('tableBody');
+    const rows = Array.from(table.getElementsByTagName('tr'));
+    
+    // Toggle sort direction
+    const th = document.querySelector(`th[onclick="sortTable(${columnIndex})"]`);
+    const currentDirection = th.getAttribute('data-sort-direction') || 'asc';
+    const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+    
+    // Reset all arrows
+    document.querySelectorAll('th').forEach(header => {
+        header.setAttribute('data-sort-direction', '');
+        header.textContent = header.textContent.replace(' ↑', '').replace(' ↓', '');
+    });
+    
+    // Set new arrow
+    th.setAttribute('data-sort-direction', newDirection);
+    th.textContent = th.textContent.replace(' ↑', '').replace(' ↓', '') + 
+                    (newDirection === 'asc' ? ' ↑' : ' ↓');
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue = a.cells[columnIndex].textContent.trim();
+        let bValue = b.cells[columnIndex].textContent.trim();
+        
+        // Handle numeric values
+        if (columnIndex === 0 || columnIndex >= 3) {
+            aValue = parseFloat(aValue.replace(/,/g, '')) || 0;
+            bValue = parseFloat(bValue.replace(/,/g, '')) || 0;
+            return newDirection === 'asc' ? aValue - bValue : bValue - aValue;
         }
-        console.log('Successfully fetched data.csv');
         
-        const csvText = await response.text();
-        console.log('CSV text loaded, length:', csvText.length);
+        // Handle text values (player name and team)
+        return newDirection === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => table.appendChild(row));
+}
+
+function filterTable() {
+    const searchInput = document.getElementById('searchInput');
+    const teamFilter = document.getElementById('teamFilter');
+    const filterValue = searchInput.value.toLowerCase();
+    const teamValue = teamFilter.value.toLowerCase();
+    const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const playerName = row.cells[1].textContent.toLowerCase();
+        const teamName = row.cells[2].textContent.toLowerCase();
         
-        // Parse CSV data and clean up
-        const rows = csvText.split('\n')
-            .map(row => row.split(','))
-            .map(row => row.filter(cell => cell.trim() !== '')); // Remove empty cells
+        const matchesSearch = playerName.includes(filterValue);
+        const matchesTeam = teamValue === 'all' || teamName === teamValue;
         
-        console.log('Parsed rows:', rows.length);
-        
-        // Remove header row and empty rows
-        players = rows.slice(1).filter(row => row.length > 1);
-        console.log('Filtered players:', players.length);
-        
-        // Clean up the data (remove quotes and trim whitespace)
-        players = players.map(row => 
-            row.map(cell => cell.replace(/"/g, '').trim())
-        );
-        
-        // Convert to the format we need for display
-        players = players.map((row, index) => [
-            index + 1,                    // Rank
-            row[0],                       // Player name
-            parseFloat(row[2]) || 0,     // Common value
-            parseFloat(row[3]) || 0,     // Uncommon value
-            parseFloat(row[4]) || 0,     // Rare value
-            parseFloat(row[5]) || 0,     // Epic value
-            parseFloat(row[6]) || 0,     // Legendary value
-            parseFloat(row[7]) || 0,     // Mystic value
-            parseFloat(row[8]) || 0      // Iconic value
-        ]);
-        
-        console.log('Data processing complete, rendering table...');
-        renderTable();
-    } catch (error) {
-        console.error('Detailed error:', error);
-        alert(`Error loading data: ${error.message}\nPlease check the browser console for more details.`);
+        row.style.display = matchesSearch && matchesTeam ? '' : 'none';
     }
 }
 
+// Version v1 - Force cache reset
+function loadData() {
+    fetch('data.csv?v=' + new Date().getTime())
+        .then(response => response.text())
+        .then(data => {
+            const rows = data.split('\n');
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            players = []; // Reset the players cache
+            
+            // Skip header row and empty rows
+            rows.slice(1).forEach((row, index) => {
+                if (row.trim()) {
+                    const columns = row.split(',').map(col => col.trim());
+                    if (columns.length >= 9) {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-700';
+
+                        // Add rank
+                        const tdRank = document.createElement('td');
+                        tdRank.textContent = index + 1;
+                        tdRank.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-300';
+                        tr.appendChild(tdRank);
+
+                        // Add player name
+                        const tdName = document.createElement('td');
+                        tdName.textContent = columns[0];
+                        tdName.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-300';
+                        tr.appendChild(tdName);
+
+                        // Add team
+                        const tdTeam = document.createElement('td');
+                        tdTeam.textContent = columns[1];
+                        tdTeam.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-300';
+                        tr.appendChild(tdTeam);
+
+                        // Add value columns with header colors
+                        [
+                            { value: columns[2], color: 'text-blue-400' },    // Common
+                            { value: columns[3], color: 'text-green-400' },   // Uncommon
+                            { value: columns[4], color: 'text-orange-400' },  // Rare
+                            { value: columns[5], color: 'text-red-400' },     // Epic
+                            { value: columns[6], color: 'text-purple-400' },  // Legendary
+                            { value: columns[7], color: 'text-yellow-400' },  // Mystic
+                            { value: columns[8], color: 'text-pink-400' }     // Iconic
+                        ].forEach(({ value, color }) => {
+                            const td = document.createElement('td');
+                            const numValue = parseInt(value.replace(/,/g, '')) || 0;
+                            td.textContent = numValue.toLocaleString();
+                            td.className = `px-4 py-3 whitespace-nowrap text-sm ${color}`;
+                            tr.appendChild(td);
+                        });
+
+                        tableBody.appendChild(tr);
+                        
+                        // Update players cache
+                        players.push([
+                            index + 1,
+                            columns[0],
+                            columns[1],
+                            parseInt(columns[2].replace(/,/g, '')) || 0,
+                            parseInt(columns[3].replace(/,/g, '')) || 0,
+                            parseInt(columns[4].replace(/,/g, '')) || 0,
+                            parseInt(columns[5].replace(/,/g, '')) || 0,
+                            parseInt(columns[6].replace(/,/g, '')) || 0,
+                            parseInt(columns[7].replace(/,/g, '')) || 0,
+                            parseInt(columns[8].replace(/,/g, '')) || 0
+                        ]);
+                    }
+                }
+            });
+            
+            // Update team filter options
+            updateTeamFilter();
+            
+            // Update the search and filter
+            filterTable();
+        })
+        .catch(error => console.error('Error loading data:', error));
+}
+
 // Initialize the application
-document.addEventListener('DOMContentLoaded', loadData); 
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    
+    // Add event listeners
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('teamFilter').addEventListener('change', filterTable);
+}); 
