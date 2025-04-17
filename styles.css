@@ -98,31 +98,31 @@ td {
 }
 
 /* Rarity colors */
-td:nth-child(3) { /* Common */
+td:nth-child(4) { /* Common */
     color: #38bdf8;
 }
 
-td:nth-child(4) { /* Uncommon */
+td:nth-child(5) { /* Uncommon */
     color: #22c55e;
 }
 
-td:nth-child(5) { /* Rare */
+td:nth-child(6) { /* Rare */
     color: #f97316;
 }
 
-td:nth-child(6) { /* Epic */
+td:nth-child(7) { /* Epic */
     color: #ef4444;
 }
 
-td:nth-child(7) { /* Legendary */
+td:nth-child(8) { /* Legendary */
     color: #a855f7;
 }
 
-td:nth-child(8) { /* Mystic */
+td:nth-child(9) { /* Mystic */
     color: #eab308;
 }
 
-td:nth-child(9) { /* Iconic */
+td:nth-child(10) { /* Iconic */
     color: #ec4899;
 }
 
