@@ -151,20 +151,42 @@ function sortTable(columnIndex) {
 function filterTable() {
     const searchInput = document.getElementById('searchInput');
     const teamFilter = document.getElementById('teamFilter');
-    const filterValue = searchInput.value.toLowerCase();
-    const teamValue = teamFilter.value.toLowerCase();
-    const rows = document.getElementById('tableBody').getElementsByTagName('tr');
-    
-    for (let row of rows) {
+    const searchValue = searchInput.value.toLowerCase();
+    const teamFilterValue = teamFilter.value.toLowerCase();
+    const rows = document.querySelectorAll('#playerTable tbody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
         const playerName = row.cells[1].textContent.toLowerCase();
-        const teamName = row.cells[2].textContent.toLowerCase();
+        const teamName = row.cells[2].textContent;
+        const matchesSearch = playerName.includes(searchValue);
+        const matchesTeam = teamFilterValue === 'all' || teamName === teamFilterValue;
         
-        const matchesSearch = playerName.includes(filterValue);
-        const matchesTeam = teamValue === 'all' || teamName === teamValue;
-        
-        row.style.display = matchesSearch && matchesTeam ? '' : 'none';
-    }
+        if (matchesSearch && matchesTeam) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update visible count
+    document.getElementById('visibleCount').textContent = visibleCount;
 }
+
+// Add scroll event listener to maintain filter state
+let lastScrollTop = 0;
+const tableContainer = document.querySelector('.overflow-x-auto');
+
+tableContainer.addEventListener('scroll', () => {
+    const scrollTop = tableContainer.scrollTop;
+    
+    // Only reapply filter if we've scrolled a significant amount
+    if (Math.abs(scrollTop - lastScrollTop) > 50) {
+        filterTable();
+        lastScrollTop = scrollTop;
+    }
+});
 
 // Version v1 - Force cache reset
 function loadData() {
