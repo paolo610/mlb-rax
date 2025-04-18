@@ -141,10 +141,6 @@ header h1 {
 .overflow-x-auto {
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    position: relative;
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 /* Table styles */
